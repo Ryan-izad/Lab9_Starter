@@ -87,7 +87,22 @@
     </section>
   </main>
 
+  <!-- Track JS script -->
+  <script src="https://cdn.trackjs.com/agent/v3/latest/t.js"></script>
   <script>
+    window.TrackJS && TrackJS.install({ 
+      token: "67aea299f0034fd7a541c4bb1b3b2b71"
+      // for more configuration options, see https://docs.trackjs.com
+    });
+  </script>
+                        
+  <script>
+    class CustomError extends Error {
+      constructor(message) {
+      super(message);
+       this.name = 'CustomError';
+      }
+    }
     let form = document.querySelector('form');
     form.addEventListener('submit', e => {
       e.preventDefault();
@@ -95,7 +110,21 @@
       let firstNum = document.querySelector('#first-num').value;
       let secondNum = document.querySelector('#second-num').value;
       let operator = document.querySelector('#operator').value;
-      output.innerHTML = eval(`${firstNum} ${operator} ${secondNum}`);
+      try {
+        if (!secondNum) {
+          throw new CustomError('Second number is missing');
+        }
+        output.innerHTML = eval(`${firstNum} ${operator} ${secondNum}`);
+      } catch (error) {
+        if (error instanceof CustomError) {
+          console.error('Custom error:', error.message);
+        } else {
+          console.error('Calculation error:', error);
+        }
+        output.innerHTML = 'Error';
+      } finally {
+        console.log('Calculation attempt completed.');
+      }
     });
 
     let errorBtns = Array.from(document.querySelectorAll('#error-btns > button'));
@@ -156,6 +185,13 @@
       }
     });
   });
+
+  window.onerror = function (message, source, lineno, colno, error) {
+      console.log(`Global error caught: ${message} at ${source}:${lineno}:${colno}`);
+      // Send the error details to TrackJS
+      // TrackJS will automatically capture errors once the script is included
+      return true; // Prevents the default browser error handling
+    };
   </script>
 </body>
 
